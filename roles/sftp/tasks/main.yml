@@ -1,0 +1,34 @@
+- name: Remove sftp-server in /etc/ssh/sshd_config
+  lineinfile: dest=/etc/ssh/sshd_config state=absent line="Subsystem sftp /usr/lib/openssh/sftp-server"
+  tags: sshd_config
+
+- name: Prepare sftp config at end of file
+  lineinfile: dest=/etc/ssh/sshd_config state=present insertafter=EOF line="Subsystem sftp internal-sftp"
+  tags: sshd_config
+
+- name: Create sftp users accounts
+  user: name={{item.name}}
+        generate_ssh_key=yes
+        password={{item.password}}
+        state=present
+  with_items: users
+  tags: sshd_config
+
+- name: create template file for sftp users
+  template: src=match_user.j2 dest=/tmp/match_user_{{ item.name }} owner=root group=root mode=0644
+  with_items: users
+  tags: sshd_config
+
+- name: append match_users files to /etc/ssh/sshd_config
+  script: add_match_user_unless_present.sh {{item.name}}
+  with_items: users
+  tags: sshd_config
+
+- name: chown root to sftp users
+  file: path=/home/{{item.name}} owner=root group=root
+  with_items: users
+  tags: sshd_config
+
+- name: reload sshd
+  service: name=ssh state=reloaded
+  tags: sshd_config

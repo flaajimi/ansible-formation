@@ -1,0 +1,36 @@
+- include: locale_and_timezone.yml
+
+- name: create l alias
+  lineinfile: dest=/etc/bash.bashrc line='alias l="ls -lah --color"' insertafter=EOF state=present
+  tags: alias_l
+
+- name: Install packages
+  apt: name={{ item }} state=present update_cache=yes cache_valid_time=86400
+  with_items:
+      - nano
+      - htop
+      - build-essential
+      - ntpdate
+      - git-core
+      - postfix
+      - php5
+      - libapache2-mod-php5
+      - php5-mysql
+      - php5-mcrypt
+      - apache2
+      - php5-gd
+  tags: apt
+
+# - include: ufw.yml
+
+# - name: Cron for ntpdate
+#   cron: name="ntpdate"
+#     job="ntpdate fr.pool.ntp.org"
+#     hour=4
+#     minute=4
+#     user="root"
+#   tags: cron
+
+- include: ssh.yml
+
+- include: postfix.yml

@@ -1,0 +1,23 @@
+{{ item.log_path }} {
+    daily
+    missingok
+    rotate {{ item.logrotate_period }}
+    compress
+    dateext
+    notifempty
+
+    # this is important if using "compress" since we need to call
+    # the "lastaction" script below before compressing:
+    delaycompress
+
+    {% if item.pid_file %}
+    # note the lack of the evil "copytruncate" option in this
+    # config.  Unicorn supports the USR1 signal and we send it
+    # as our "lastaction" action:
+    lastaction
+        # assuming your pid file is in {{ item.pid_file }}
+        pid={{ item.pid_file }}
+        test -s $pid && kill -{{ item.signal|default('USR1') }} "$(cat $pid)"
+    endscript
+    {% endif %}
+}

@@ -1,0 +1,6 @@
+- name: ssh config - disable x11 forwarding and PAM
+  command: "sed -i '{{item.rx}}' /etc/ssh/sshd_config"
+  with_items:
+    - rx: "s/^X11Forwarding yes/X11Forwarding no/g"
+    - rx: "s/^UsePAM yes/UsePAM no/g"
+  tags: ssh_config

@@ -1,0 +1,4 @@
+- name: "Install logrotate files"
+  template: src=logrotate.j2 dest=/etc/logrotate.d/{{item.name}}
+  with_items: logrotate_files
+  tags: logrotate

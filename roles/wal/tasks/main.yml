@@ -1,0 +1,70 @@
+- name: "Copy github ssh key to {{user}} home"
+  copy: src=ssh_github_key dest=/home/{{user}}/wal_id_rsa owner={{user}} group={{user}} mode={{600}}
+  tags: copy_ssh
+
+- name: Clone repo
+  sudo: True
+  sudo_user: '{{user}}'
+  git:
+    accept_hostkey: yes
+    clone: yes
+    dest: /home/{{user}}/www
+    repo: '{{git_repo}}'
+    update: no
+    key_file: "/home/{{user}}/wal_id_rsa"
+  tags: gitclone
+
+- name: Create application folders for {{user}}
+  file: path={{ item.path }} state=directory owner={{ user }} group={{ user }} mode=0755
+  with_items:
+    - {path: '/home/{{ user }}/shared/config' }
+    - {path: '/home/{{ user }}/shared/images/bg' }
+    - {path: '/home/{{ user }}/www/html/cache' }
+    - {path: '/home/{{ user }}/www/html/file' }
+    - {path: '/home/{{ user }}/www/html/sharedoc/4' }
+  tags: create_application_folders
+
+- name: Deploy settings for {{user}}
+  template:
+    src: settings.inc.php.j2
+    dest: /home/{{user}}/shared/config/settings.inc.php
+    owner: '{{user}}'
+    group: '{{user}}'
+    mode: 0644
+
+- name: Symlink settings for {{user}}
+  file: src=/home/{{user}}/shared/config/settings.inc.php dest=/home/{{user}}/www/html/config/settings.inc.php state=link
+
+- name: Other symlinks settings for {{user}}
+  file: src={{item.src}} dest={{item.dest}} state=link
+  with_items:
+    - {src: '/home/{{user}}/shared/images/bg', dest: '/home/{{user}}/www/html/images/bg'}
+  tags: other_symlinks
+
+- name: Set {{user}} as owner of all files
+  file:
+    path: /home/{{user}}/www/html
+    recurse: yes
+    owner: '{{user}}'
+    group: '{{user}}'
+
+- name: Set default rights to 755 on folders
+  command: find {{item}} -type d -exec chmod 755 {} \;
+  with_items:
+    - /home/{{user}}/www/html
+
+- name: Set default rights to 644 on files
+  command: find {{item}} -type f -exec chmod 644 {} \;
+  with_items:
+    - /home/{{user}}/www/html
+
+- name: Set group write rights on some folders
+  command: find {{item}} -type d -exec chmod -R g+ws {} \;
+  with_items:
+    - /home/{{user}}/shared/images
+    - /home/{{user}}/www/html/cache
+    - /home/{{user}}/www/html/picture
+    - /home/{{user}}/www/html/file
+    - /home/{{user}}/www/html/tpl_c
+    - /home/{{user}}/www/html/sharedoc
+  tags: set_write

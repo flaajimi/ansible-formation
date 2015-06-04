@@ -1,0 +1,11 @@
+- name: Install packages
+  shell: DEBIAN_FRONTEND='noninteractive' apt-get install backup-manager
+  tags: backup-manager
+
+- name: Configuration
+  template: src=backup-manager.conf.j2 dest=/etc/backup-manager.conf owner=root group=root mode=0600
+  tags: backup-manager
+
+- name: Cron daily backup manager
+  copy: src=backup-manager dest=/etc/cron.daily/backup-manager owner=root group=root mode=0750
+  tags: backup-manager

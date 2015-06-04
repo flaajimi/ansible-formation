@@ -1,0 +1,11 @@
+- name: dump {{db_name}} database
+  mysql_db:
+    name: "{{db_name}}"
+    state: dump
+    login_user: "{{login_user}}"
+    login_password: "{{login_password}}"
+    target: "/tmp/{{db_name}}.sql.gz"
+- name: fetch the dump
+  fetch:
+    dest: dump
+    src: "/tmp/{{db_name}}.sql.gz"

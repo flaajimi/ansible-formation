@@ -1,0 +1,4 @@
+- name: "Git pull {{user}}"
+  sudo: yes
+  sudo_user: "{{ user }}"
+  git: repo={{repo}} dest=/home/{{user}}/www remote=origin version=master accept_hostkey=true key_file=/home/{{user}}/wal_id_rsa

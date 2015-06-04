@@ -1,0 +1,29 @@
+- name: Install packages
+  apt: name={{ item }} state=present update_cache=yes cache_valid_time=86400
+  with_items:
+  - ufw
+  tags: apt
+
+- name: UFW - limit ssh
+  ufw: rule=limit port=ssh proto=tcp
+  tags: ufw
+
+- name: UFW - limit
+  ufw: rule=limit port=ssh proto=tcp
+  tags: ufw
+
+- name: UFW - Allow SSH
+  ufw: rule=allow name=OpenSSH
+  tags: ufw
+
+- name: UFW - Allow http, https, ssh
+  ufw: rule=allow port={{item.port}} proto=tcp
+  with_items:
+  - port: 80
+  - port: 22
+  - port: 443
+  tags: ufw
+
+- name: UFW - Enable
+  ufw: state=enabled policy=deny
+  tags: ufw

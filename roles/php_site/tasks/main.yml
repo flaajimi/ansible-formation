@@ -1,0 +1,37 @@
+# Create user
+- name: Create user {{user}}
+  user: name={{user}} generate_ssh_key=yes createhome=yes state=present shell=/bin/bash
+  register: newuser
+  tags: create_user
+
+- name: Add www-data user in {{user}} group
+  user: name=www-data append=yes groups={{user}}
+  when: add_wwwdata_in_group == true
+
+- name: Generate random password for {{user}} only on creation
+  shell: echo "{{user}}:$(/usr/bin/openssl rand -base64 32)"|chpasswd
+  when: newuser.changed
+  tags: create_user
+
+- name: Authorize {{user}} local ssh
+  authorized_key: user={{user}} key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+  tags: authorize_key
+
+- name: Deploy apache vhost template
+  template:
+    src: apache.conf.j2
+    dest: /etc/apache2/sites-available/{{ url }}.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Enable site
+  file: src=/etc/apache2/sites-available/{{ url }}.conf dest=/etc/apache2/sites-enabled/{{ url }}.conf state=link owner=root group=root mode=0644
+  notify:
+    - reload apache2
+
+- name: Enable php mcrypt
+  file: src=/etc/php5/mods-available/mcrypt.ini dest=/etc/php5/apache2/conf.d/20-mcrypt.ini state=link owner=root group=root mode=0644
+  notify:
+    - reload apache2
+

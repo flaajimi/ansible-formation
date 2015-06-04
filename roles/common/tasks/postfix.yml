@@ -1,0 +1,5 @@
+- name: Postfix - disable tls
+  command: "sed -i '{{item.rx}}' /etc/postfix/main.cf"
+  with_items:
+    - rx: "s/^smtpd_use_tls=yes/smtpd_use_tls=no/g"
+  tags: postfix_config
