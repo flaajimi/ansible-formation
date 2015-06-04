@@ -1,0 +1,13 @@
+- name: Deploy apache vhost template
+  template:
+    src: apache.conf.j2
+    dest: /etc/apache2/sites-available/{{ url }}.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Enable site
+  file: src=/etc/apache2/sites-available/{{ url }}.conf dest=/etc/apache2/sites-enabled/{{ url }}.conf state=link owner=root group=root mode=0644
+  notify:
+    - reload apache2
+
