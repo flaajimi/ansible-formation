@@ -4,36 +4,15 @@
 
   vars:
     user: ansible
-  tasks:
-    - name: Install packages
-      apt: name={{ item }} state=present update_cache=yes cache_valid_time=86400
-      with_items:
-        - nano
-        - build-essential
-        - git-core
-        - apache2
-      tags: apt
-    - name: Create ansible user
-      sudo: true
-      user: name={{user}} generate_ssh_key=yes createhome=yes state=present shell=/bin/bash
-      tags: create_user
-    - name: Copy deploy key
-      copy: src=files/deploy_key_for_supersite dest=/home/{{user}}
-    - name: Clone repo
-      sudo: True
-      sudo_user: '{{user}}'
-      git:
-        accept_hostkey: yes
-        clone: yes
-        dest: /home/{{user}}/www
-        repo: git@github.com:jloosfelt/supersite.git
-        update: yes
-        key_file: "/home/{{user}}/deploy_key_for_supersite"
-      tags: gitclone
-  # roles:
-  #   - role: vhost
-  #     user: '{{ user }}'
-  #     base_dir: /home/{{user}}/www
-  #     url: ansible.dev
-  #     tags:
-  #     - vhost
+
+  roles:
+    - role: ansible_site
+      deploy_key_file: deploy_key_for_supersite
+      key_file_path: "/home/{{user}}/deploy_key_for_supersite"
+      git_repo: git@github.com:jloosfelt/supersite.git
+    - role: vhost
+      user: '{{ user }}'
+      base_dir: /home/{{user}}/www
+      url: ansible.dev
+      tags:
+      - vhost
